@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-/** Sestavi text uctenky. */
 public class ReceiptPrinter {
 
     static final int WIDTH = 40;
@@ -22,7 +21,6 @@ public class ReceiptPrinter {
         return items.stream().map(Item::total).reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    /** DPH obsazene v cene s DPH. */
     public BigDecimal vat(BigDecimal total) {
         BigDecimal rate = store.vatRate();
         return total.multiply(rate)

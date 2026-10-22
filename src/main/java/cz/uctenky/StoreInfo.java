@@ -10,7 +10,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
 
-/** Udaje obchodu, ktere se opakuji na kazde uctence. */
 public record StoreInfo(String name, String address, String ico, String dic,
                         String cashier, String footer, String currency, BigDecimal vatRate) {
 

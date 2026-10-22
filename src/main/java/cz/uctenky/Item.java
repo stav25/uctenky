@@ -3,7 +3,6 @@ package cz.uctenky;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-/** Jedna polozka nakupu. */
 public record Item(String name, BigDecimal quantity, BigDecimal unitPrice) {
 
     public Item {
@@ -23,7 +22,6 @@ public record Item(String name, BigDecimal quantity, BigDecimal unitPrice) {
         return quantity.multiply(unitPrice).setScale(2, RoundingMode.HALF_UP);
     }
 
-    /** Parsuje radek ve tvaru "nazev;mnozstvi;cena" (desetinna carka i tecka). */
     public static Item parse(String line) {
         String[] parts = line.split(";");
         if (parts.length != 3) {

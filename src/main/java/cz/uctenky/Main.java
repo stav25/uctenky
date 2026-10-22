@@ -22,7 +22,6 @@ public class Main {
                 new PrintStream(System.out, true, StandardCharsets.UTF_8), System.err));
     }
 
-    /** @return exit code */
     static int run(String[] args, Reader in, PrintStream out, PrintStream err) {
         Path config = Path.of("obchod.properties");
         for (int i = 0; i < args.length; i++) {
