@@ -15,6 +15,9 @@ public record Item(String name, BigDecimal quantity, BigDecimal unitPrice) {
         if (unitPrice == null || unitPrice.signum() < 0) {
             throw new IllegalArgumentException("Cena nesmi byt zaporna.");
         }
+        if (unitPrice.signum() > 0 && quantity.multiply(unitPrice).setScale(2, RoundingMode.HALF_UP).signum() == 0) {
+            throw new IllegalArgumentException("Celkova cena polozky by byla 0.00.");
+        }
         name = name.trim();
     }
 

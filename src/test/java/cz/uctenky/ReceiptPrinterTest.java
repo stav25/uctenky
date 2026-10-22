@@ -50,4 +50,25 @@ class ReceiptPrinterTest {
         assertEquals("0.5", ReceiptPrinter.fmt(new BigDecimal("0.50")));
         assertEquals("10", ReceiptPrinter.fmt(new BigDecimal("1E+1")));
     }
+
+    @Test
+    void longNamesAreWrapped() {
+        String name = "Velmi dlouhy nazev polozky ktery se urcite nevejde na uctenku 40 znaku";
+        String r = printer.render(List.of(new Item(name, BigDecimal.ONE, BigDecimal.TEN)), 1, LocalDateTime.now());
+        r.lines().forEach(l -> assertTrue(l.length() <= ReceiptPrinter.WIDTH, l));
+        assertTrue(r.contains("Velmi dlouhy nazev polozky ktery se\n"));
+    }
+
+    @Test
+    void veryLongWordIsSplit() {
+        assertEquals(List.of("a".repeat(40), "aaaaa"), ReceiptPrinter.wrap("a".repeat(45)));
+    }
+
+    @Test
+    void hugeAmountsStayWithinWidth() {
+        Item big = new Item("X", new BigDecimal("1000000"), new BigDecimal("99999999.99"));
+        String r = printer.render(List.of(big), 1, LocalDateTime.now());
+        r.lines().forEach(l -> assertTrue(l.length() <= ReceiptPrinter.WIDTH, l));
+        assertTrue(r.contains("99999999990000.00"));
+    }
 }

@@ -2,10 +2,13 @@ package cz.uctenky;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -15,6 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Main {
 
     public static final String NAME = "Uctenky";
+    static final String DEFAULT_CONFIG = "obchod.properties";
     private static final AtomicInteger COUNTER = new AtomicInteger();
 
     public static void main(String[] args) {
@@ -23,7 +27,7 @@ public class Main {
     }
 
     static int run(String[] args, Reader in, PrintStream out, PrintStream err) {
-        Path config = Path.of("obchod.properties");
+        Path config = null;
         for (int i = 0; i < args.length; i++) {
             switch (args[i]) {
                 case "-h", "--help" -> {
@@ -51,9 +55,12 @@ public class Main {
 
         StoreInfo store;
         try {
-            store = StoreInfo.load(config);
+            store = loadStore(config);
+        } catch (NoSuchFileException e) {
+            err.println("Konfiguracni soubor neexistuje: " + config);
+            return 1;
         } catch (IOException | IllegalArgumentException e) {
-            err.println("Nelze nacist konfiguraci '" + config + "': " + e.getMessage());
+            err.println("Nelze nacist konfiguraci: " + e.getMessage());
             return 1;
         }
 
@@ -71,6 +78,22 @@ public class Main {
         out.println();
         out.print(new ReceiptPrinter(store).render(items, COUNTER.incrementAndGet(), LocalDateTime.now()));
         return 0;
+    }
+
+    static StoreInfo loadStore(Path explicit) throws IOException {
+        if (explicit != null) {
+            return StoreInfo.load(explicit);
+        }
+        Path local = Path.of(DEFAULT_CONFIG);
+        if (Files.exists(local)) {
+            return StoreInfo.load(local);
+        }
+        try (InputStream in = Main.class.getResourceAsStream("/" + DEFAULT_CONFIG)) {
+            if (in == null) {
+                throw new NoSuchFileException(DEFAULT_CONFIG);
+            }
+            return StoreInfo.load(new InputStreamReader(in, StandardCharsets.UTF_8));
+        }
     }
 
     static List<Item> readItems(Reader in, PrintStream out) throws IOException {
@@ -96,7 +119,7 @@ public class Main {
     static String usage() {
         return """
                 Pouziti: java -jar uctenky.jar [-c obchod.properties] [-h] [-v]
-                  -c, --config  soubor s udaji obchodu (vychozi: obchod.properties)
+                  -c, --config  soubor s udaji obchodu (vychozi: obchod.properties v aktualni slozce, jinak vestavena kopie)
                   -h, --help    napoveda
                   -v, --version verze programu
                 Polozky se zadavaji ze standardniho vstupu, jedna na radek: nazev;mnozstvi;cena""";

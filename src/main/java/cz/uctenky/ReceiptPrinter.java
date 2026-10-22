@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ReceiptPrinter {
@@ -32,14 +33,14 @@ public class ReceiptPrinter {
         String line = "-".repeat(WIDTH);
         String dbl = "=".repeat(WIDTH);
 
-        sb.append(center(store.name())).append('\n');
-        if (!store.address().isEmpty()) sb.append(center(store.address())).append('\n');
-        if (!store.ico().isEmpty()) sb.append(center("ICO: " + store.ico())).append('\n');
-        if (!store.dic().isEmpty()) sb.append(center("DIC: " + store.dic())).append('\n');
+        appendCentered(sb, store.name());
+        if (!store.address().isEmpty()) appendCentered(sb, store.address());
+        if (!store.ico().isEmpty()) appendCentered(sb, "ICO: " + store.ico());
+        if (!store.dic().isEmpty()) appendCentered(sb, "DIC: " + store.dic());
         sb.append(dbl).append('\n');
 
         for (Item it : items) {
-            sb.append(it.name()).append('\n');
+            for (String part : wrap(it.name())) sb.append(part).append('\n');
             String left = "  " + fmt(it.quantity()) + " x " + money(it.unitPrice());
             sb.append(twoCols(left, money(it.total()))).append('\n');
         }
@@ -51,9 +52,12 @@ public class ReceiptPrinter {
         sb.append(dbl).append('\n');
 
         sb.append(twoCols("Uctenka c. " + String.format("%06d", receiptNumber), time.format(DATE))).append('\n');
-        if (!store.cashier().isEmpty()) sb.append("Obsluhoval: ").append(store.cashier()).append('\n');
+        if (!store.cashier().isEmpty()) {
+            for (String part : wrap("Obsluhoval: " + store.cashier())) sb.append(part).append('\n');
+        }
         if (!store.footer().isEmpty()) {
-            sb.append('\n').append(center(store.footer())).append('\n');
+            sb.append('\n');
+            appendCentered(sb, store.footer());
         }
         return sb.toString();
     }
@@ -74,6 +78,36 @@ public class ReceiptPrinter {
 
     static String twoCols(String left, String right) {
         int pad = WIDTH - left.length() - right.length();
-        return left + " ".repeat(Math.max(1, pad)) + right;
+        if (pad < 1) {
+            return left + "\n" + " ".repeat(Math.max(0, WIDTH - right.length())) + right;
+        }
+        return left + " ".repeat(pad) + right;
+    }
+
+    private static void appendCentered(StringBuilder sb, String text) {
+        for (String part : wrap(text)) sb.append(center(part)).append('\n');
+    }
+
+    static List<String> wrap(String text) {
+        List<String> lines = new ArrayList<>();
+        StringBuilder cur = new StringBuilder();
+        for (String word : text.trim().split("\\s+")) {
+            while (word.length() > WIDTH) {
+                if (cur.length() > 0) {
+                    lines.add(cur.toString());
+                    cur.setLength(0);
+                }
+                lines.add(word.substring(0, WIDTH));
+                word = word.substring(WIDTH);
+            }
+            if (cur.length() > 0 && cur.length() + 1 + word.length() > WIDTH) {
+                lines.add(cur.toString());
+                cur.setLength(0);
+            }
+            if (cur.length() > 0) cur.append(' ');
+            cur.append(word);
+        }
+        if (cur.length() > 0 || lines.isEmpty()) lines.add(cur.toString());
+        return lines;
     }
 }

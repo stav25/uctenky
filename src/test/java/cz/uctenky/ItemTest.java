@@ -32,4 +32,10 @@ class ItemTest {
         assertThrows(IllegalArgumentException.class, () -> Item.parse("x;0;1"));
         assertThrows(IllegalArgumentException.class, () -> Item.parse("x;1;-1"));
     }
+
+    @Test
+    void rejectsItemRoundingToZero() {
+        assertThrows(IllegalArgumentException.class, () -> Item.parse("x;0,001;1"));
+        assertEquals(new BigDecimal("0.00"), Item.parse("zdarma;1;0").total());
+    }
 }

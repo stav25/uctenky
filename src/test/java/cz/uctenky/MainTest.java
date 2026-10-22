@@ -54,4 +54,17 @@ class MainTest {
         assertEquals(2, run("", "--nesmysl"));
         assertEquals(2, run("", "-c"));
     }
+
+    @Test
+    void missingConfigMessageNamesFile() {
+        run("", "-c", "/neexistuje.properties");
+        assertTrue(errBytes.toString(StandardCharsets.UTF_8).contains("neexistuje.properties"));
+        assertTrue(errBytes.toString(StandardCharsets.UTF_8).contains("neexistuje:"));
+    }
+
+    @Test
+    void loadsDefaultConfig() throws Exception {
+        StoreInfo s = Main.loadStore(null);
+        assertNotNull(s.name());
+    }
 }
